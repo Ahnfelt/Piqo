@@ -1,4 +1,4 @@
-module Expression where
+module Expression (Expression (..), Literals (..), free) where
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 
@@ -7,6 +7,8 @@ data Expression
     | EObject (Maybe Expression) (Map.Map String Expression)
     | EField Expression String
     | ECall Expression Expression
+    | EList [Expression] (Maybe Expression)
+    | EString String
     | EInteger Integer
     | EFloat Double
     | EBoolean Bool
@@ -17,6 +19,8 @@ data Expression
 
 class Literals a where
     void :: a
+    list :: [a] -> a
+    string :: String -> a
     integer :: Integer -> a
     float :: Double -> a
     boolean :: Bool -> a
@@ -25,6 +29,8 @@ class Literals a where
 
 instance Literals Expression where
     void = EObject Nothing Map.empty
+    list n = EList n Nothing
+    string n = EString n
     integer n = EInteger n
     float n = EFloat n
     boolean n = EBoolean n
@@ -40,4 +46,8 @@ free (ECall e e') = free e `Set.union` free e'
 free (EVariable i) = Set.singleton i
 free (ELet i e e') = free e `Set.union` (free e' Set.\\ Set.singleton i)
 free (ESequence e e') = free e `Set.union` free e'
+free (EString _) = Set.empty
+free (EInteger _) = Set.empty
+free (EFloat _) = Set.empty
+free (EBoolean _) = Set.empty
 

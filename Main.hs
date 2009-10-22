@@ -1,9 +1,9 @@
 module Main where
+import qualified Data.Map as Map
+import System.Environment
 import Interpreter
 import Value
 import Expression
-import qualified Data.Map as Map
-import System.Environment
 
 main = do
     a <- getArgs
@@ -82,5 +82,13 @@ tests = [
             (ECall 
                 (EField (EField (EVariable "o") "foo") "plus")
                 (EField (EVariable "o") "bar"))
+    ),
+    ("List/range", integer 2,
+        ELet "l" 
+            (ECall (EField (integer 1) "to") (integer 3))
+            (ECall (EField (ECall (EField (EVariable "l") "getTail") void) "getHead") void)
+    ),
+    ("String", integer 6,
+        ECall (EField (string "foobar") "getLength") void
     )]
 

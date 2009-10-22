@@ -11,6 +11,13 @@ evaluate :: Map.Map String Value -> Expression -> Value
 evaluate m (EVariable i) = m Map.! i
 evaluate m (ELet i e e') = evaluate (Map.insert i (evaluate m e) m) e'
 evaluate m (ESequence e e') = evaluate m e `seq` evaluate m e'
+evaluate m (EList n t) = 
+    let VList n' = case t of
+            Just e -> evaluate m e
+            Nothing -> VList [] in
+    let n'' = map (evaluate m) n in
+    VList (n'' ++ n')
+evaluate m (EString n) = VString n
 evaluate m (EInteger n) = VInteger n
 evaluate m (EFloat n) = VFloat n
 evaluate m (EBoolean n) = VBoolean n
