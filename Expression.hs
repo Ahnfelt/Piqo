@@ -7,14 +7,14 @@ data Expression
     | EObject (Maybe Expression) (Map.Map String Expression)
     | EField Expression String
     | ECall Expression Expression
-    | EList [Expression] (Maybe Expression)
+    | EVariable String
+    | ELet String Expression Expression
+    | ESequence Expression Expression
+    | EList
     | EString String
     | EInteger Integer
     | EFloat Double
     | EBoolean Bool
-    | EVariable String
-    | ELet String Expression Expression
-    | ESequence Expression Expression
     deriving Show
 
 class Literals a where
@@ -29,7 +29,8 @@ class Literals a where
 
 instance Literals Expression where
     void = EObject Nothing Map.empty
-    list n = EList n Nothing
+    list (h:t) = ECall (EField (list t) "after") h
+    list [] = EList
     string n = EString n
     integer n = EInteger n
     float n = EFloat n
@@ -46,6 +47,7 @@ free (ECall e e') = free e `Set.union` free e'
 free (EVariable i) = Set.singleton i
 free (ELet i e e') = free e `Set.union` (free e' Set.\\ Set.singleton i)
 free (ESequence e e') = free e `Set.union` free e'
+free (EList) = Set.empty
 free (EString _) = Set.empty
 free (EInteger _) = Set.empty
 free (EFloat _) = Set.empty
