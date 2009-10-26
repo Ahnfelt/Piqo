@@ -299,6 +299,7 @@ class Parser {
         do {
             var field = peek() >= upperA && peek() <= upperZ;
             var identifier = attempt(parseIdentifier);
+            if(identifier == null) identifier = attempt(parseString);
             if(identifier == null) break;
             required(colon);
             var body = parseExpression();

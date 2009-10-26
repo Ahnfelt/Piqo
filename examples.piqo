@@ -1,0 +1,142 @@
+# Hello world:
+
+    print "Hello, World!"
+    
+# A definition:
+
+    favoriteColor = 'green'
+
+# A function definition:
+
+    twice = {|x| x * 2}
+
+# A shorter function definition:
+
+    twice = {_ * 2}
+
+# Some function applications:
+
+    twice(twice(5))
+    
+# A list:
+
+    list = [1, 2, 3, 4, 5, 6]
+    
+# Pick x for each x in the list where x is even:
+
+    even = [x | x: list, x % 2 == 0]
+    
+# The odd numbers of that list:
+
+    odd = list.where{_ % 2 != 0}
+    
+# An object definition with getters:
+
+    v1 = (getX: {10}, getY: {20})
+    
+# A shorter definition (with a shorthand for getters):
+
+    v2 = (X: 10, Y: 10)
+    
+# A function for constructing vectors (with an addition operator):
+
+    vector = {|x, y| (
+            X: x
+            Y: y
+            '+': {|other| vector(x + other.X, y + other.Y) }
+    )}
+
+# Do something only if a is less than b:
+
+    (a < b).then {
+        print("It seems a is less than b!")
+    }
+    
+# Do something in both cases:
+
+    (a < b).thenElse {
+        print "less"
+    } {
+        print "greater or equal"
+    }
+
+# If that was too strange, you can define your own if:
+
+    if = {_.thenElse}
+
+# It's just a function, try using it:
+
+    if(a > b) {
+        print "then do this"
+    } {
+        print "else do that"
+    }
+
+# Or define your own while loop:
+
+    while = {|condition, body|
+        condition().then {
+            body()
+            while(condition, body)
+        }
+    }
+
+# And use it (you can only update certain objects, not variables):
+
+    x = slot(10)
+    y = slot(5)
+    while {x.Value > y.Value} {
+        print x
+        x.Value -= 1
+    }
+
+# Slots are defined like this:
+
+    slot = {|value|
+        getValue: {
+            # Magic goes here
+        }
+        setValue: {
+            # More magic goes here
+        }
+    }
+
+# So when you do this:
+
+    x.Value -= 1
+    
+# It actually means this:
+
+    x.setValue(x.getValue() - 1)
+
+# Everything is an object. An object is just a collection of methods.
+# You can create a new object based on an old one like this:
+
+    vector3d = {|x, y, z|
+        (: vector(x, y)
+            Z: z
+            '+: {|other| vector3d(x + other.X, y + other.Y, z + other.Z) }
+        )
+    }
+
+# A module is simply an expression. When you import it, you get the
+# value returned by that expression, plus any exported type definitions:
+
+    ~/math/random
+    print(random.Float)
+
+# You can import single symbols as well:
+
+    ~/io/log _ (debug, warn)
+    debug "Hello there, log module!"
+
+# Packages that aren't installed are automatically downloaded (if enabled).
+# You might like to explicitly state the type of some definitions:
+
+    :: {|String| String}
+    slugify = {|value|
+        value.trim().lower().replace(' ', '-')
+    }
+
+# There are much more to the type system, but that'll do for a taste.
+

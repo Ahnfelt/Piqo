@@ -33,7 +33,7 @@ class Main {
     public static function main() {
         //trace(new Interpreter().evaluate(testRecursive()));
         var text = "
-map [('one', 1), ('two', 2)]
+one = ('+': {|other| other})
         ";
         try {
             var e = new Parser().parse(text);
