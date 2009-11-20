@@ -110,7 +110,7 @@ class Interpreter {
             case ESequence(left, right):
                 evaluate(left, variables);
                 return evaluate(right, variables);
-            case EList:
+            case EEmpty:
                 return VList([]);
             case EString(value):
                 return VString(value);
@@ -118,9 +118,7 @@ class Interpreter {
                 return VInteger(value);
             case EFloat(value):
                 return VFloat(value);
-            case EBoolean(value):
-                return VBoolean(value);
-        }
+            }
     }
     
     private function getField(object: Value, field: String): Value {

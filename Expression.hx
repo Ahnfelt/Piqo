@@ -8,11 +8,19 @@ enum Expression {
     ELet(name: String, value: Expression, body: Expression);
     ERecursive(bindings: Hash<Expression>, body: Expression);
     ESequence(left: Expression, right: Expression);
-    EList;
+    EEmpty;
     EString(value: String);
     EInteger(value: Int);
     EFloat(value: Float);
-    EBoolean(value: Bool);
+}
+
+enum Pattern {
+    PVariable(name: String);
+    PHeadTail(head: Pattern, tail: Pattern);
+    PEmpty;
+    PString(value: String);
+    PInteger(value: Int);
+    PFloat(value: Float);
 }
 
 class Expressions {
@@ -59,11 +67,10 @@ class Expressions {
             case ESequence(left, right):
                 free(left, variables);
                 free(right, variables);
-            case EList:
+            case EEmpty:
             case EString(value):
             case EInteger(value):
             case EFloat(value):
-            case EBoolean(value):
         }
         return variables;
     }

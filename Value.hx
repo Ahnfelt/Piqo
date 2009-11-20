@@ -41,7 +41,7 @@ class Values {
                     if(value) ECall(EVariable("t"), Expressions.getVoid())
                     else ECall(EVariable("e"), Expressions.getVoid())
                 )));
-                fields.set("getNot", VLambda(nothing, "_", EBoolean(!value)));
+                fields.set("getNot", VNative(function(_) { return VBoolean(!value); }));
                 return VObject(null, fields);
             case VInteger(value):
                 var fields = new Hash<Value>();

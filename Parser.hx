@@ -29,6 +29,7 @@ class Parser {
     private static var lineFeed = "\n".charCodeAt(0);
     private static var backslash = "\\".charCodeAt(0);
     private static var underscore = "_".charCodeAt(0);
+    private static var bang = "!".charCodeAt(0);
     private static var plus = "+".charCodeAt(0);
     private static var dash = "-".charCodeAt(0);
     private static var tilde = "~".charCodeAt(0);
@@ -36,7 +37,6 @@ class Parser {
     private static var semicolon = ";".charCodeAt(0);
     private static var dot = ".".charCodeAt(0);
     private static var colon = ":".charCodeAt(0);
-    private static var bang = "!".charCodeAt(0);
     private static var equal = "=".charCodeAt(0);
     private static var slash = "/".charCodeAt(0);
     private static var pipe = "|".charCodeAt(0);
@@ -48,6 +48,58 @@ class Parser {
     private static var endBrace = "}".charCodeAt(0);
     private static var singleQuote = "'".charCodeAt(0);
     private static var doubleQuote = "\"".charCodeAt(0);
+    
+    private static function getter(input: String) {
+        return input.charAt(0).toLowerCase() + input.substr(1);
+    }
+    
+    private static function setter(input: String) {
+        return "set" + input;
+    }
+    
+    private static function generateOperatorCharacters(): IntHash<Void> {
+        var result = new IntHash<Void>();
+        var c = "%/=&|+-^*<>$" + "?~\\:.!@";
+        for(i in 0...c.length) {
+            result.set(c.charCodeAt(i), null);
+        }
+        return result;
+    }
+
+    private static function generateSpecialOperators() {
+        var result = new Hash<Void>();
+        result.set(":", null);
+        result.set(".", null);
+        result.set("|", null);
+        result.set("!", null);
+        result.set("=", null);
+        result.set(":=", null);
+        result.set("+=", null);
+        result.set("-=", null);
+        result.set("*=", null);
+        result.set(".=", null);
+        return result;
+    }
+    
+    private static function chars(input) {
+        var output = new IntHash<Void>();
+        for(i in 0...input.length) {
+            output.set(input.charCodeAt(i), null);
+        }
+        return output;
+    }
+    
+    private static var operatorCharacters = generateOperatorCharacters();
+    private static var specialOperators = generateSpecialOperators();
+    private static var normalPrecedences = [
+        {last: chars("$\\"), leftAssociative: false, rightAssociative: true},
+        {last: chars("|:"), leftAssociative: true, rightAssociative: false},
+        {last: chars("&."), leftAssociative: true, rightAssociative: false},
+        {last: chars("=><"), leftAssociative: false, rightAssociative: false},
+        {last: chars("+-~"), leftAssociative: true, rightAssociative: false},
+        {last: chars("*/%"), leftAssociative: true, rightAssociative: false},
+        {last: chars("^!@"), leftAssociative: false, rightAssociative: true},
+    ];
     
     public function new() {
     }
@@ -140,24 +192,26 @@ class Parser {
     }
 
     private function parseExpression() {
-        return parseApply();
+        return parseBinaryOperators(normalPrecedences, 0, parseApply);
     }
 
     private function parseApply() {
+        if(optional(dash)) return ECall(EField(parseAtom(), "negate"), Expressions.getVoid());
+        if(optional(bang)) return ECall(EField(parseAtom(), "not"), Expressions.getVoid());
         var left = parseAtom();
         while(true) {
             if(optional(dot)) {
-                if(peek() >= lowerA && peek() <= lowerZ) {
-                    left = EField(left, parseIdentifier());
-                } else if(peek() >= upperA && peek() <= upperZ) {
+                if(peek() >= upperA && peek() <= upperZ) {
                     var identifier = parseIdentifier();
                     if(optional(equal)) {
-                        left = ECall(EField(left, "set" + identifier), parseExpression());
+                        left = ECall(EField(left, setter(identifier)), parseExpression());
                     } else {
-                        left = ECall(EField(left, "get" + identifier), Expressions.getVoid());
+                        left = ECall(EField(left, getter(identifier)), Expressions.getVoid());
                     }
                 } else {
-                    throw new ParserException("Field expected", file, line, column);
+                    var right = attempt(parseIdentifier);
+                    if(right == null) right = parseString();
+                    left = EField(left, right);
                 }
             } else {
                 var arguments = attempt(parseArguments);
@@ -194,7 +248,7 @@ class Parser {
         if(object != null) return object;
         var lambda = attempt(parseLambda);
         if(lambda != null) return lambda;
-        var list = attempt(parseList);
+        var list = attempt(parseEmpty);
         if(list != null) return list;
         var tuple = attempt(parseTuple);
         if(tuple != null) return tuple;
@@ -267,7 +321,36 @@ class Parser {
         return patterns;
     }
 
-    private function parseList() {
+    private function parsePattern() {
+        var identifier = attempt(parseIdentifier);
+        if(identifier != null) return PVariable(identifier);
+        var string = attempt(parseString);
+        if(string != null) return PString(string);
+        var integer = attempt(parseInteger);
+        if(integer != null) return PInteger(integer);
+        var float = attempt(parseFloat);
+        if(float != null) return PFloat(float);
+        return parseEmptyPattern();
+    }
+    
+    private function parseEmptyPattern() {
+        required(beginBracket);
+        var items = [];
+        do {
+            var item = attempt(parsePattern);
+            if(item == null) break;
+            items.push(item);
+        } while(separator(comma));
+        var result = if(optional(colon)) parsePattern() else null;
+        items.reverse();
+        for(item in items) {
+            result = PHeadTail(item, result);
+        }
+        required(endBracket);
+        return result;
+    }
+
+    private function parseEmpty() {
         // TODO: List comprehensions
         required(beginBracket);
         var items = [];
@@ -276,7 +359,7 @@ class Parser {
             if(item == null) break;
             items.push(item);
         } while(separator(comma));
-        var result = if(optional(colon)) parseExpression() else EList;
+        var result = if(optional(colon)) parseExpression() else EEmpty;
         items.reverse();
         for(item in items) {
             result = ECall(EField(result, "after"), item);
@@ -304,7 +387,7 @@ class Parser {
             required(colon);
             var body = parseExpression();
             if(field) {
-                fields.set("get" + identifier, ELet("_t", body, ELambda("_", EVariable("_t"))));
+                fields.set(getter(identifier), ELet("_t", body, ELambda("_", EVariable("_t"))));
             } else {
                 fields.set(identifier, body);
             }
@@ -318,6 +401,51 @@ class Parser {
             throw new ParserException("This identifier must start with a lowercase letter", file, line, column);
         }
         return EVariable(parseIdentifier());
+    }
+    
+    private function parseBinaryOperators(precedences: Array<Precedence>, index, parseLeaf) {
+        if(index >= precedences.length) {
+            return parseLeaf();
+        } 
+        var precedence = precedences[index];
+        var left = parseBinaryOperators(precedences, index + 1, parseLeaf);
+        var firstOperator = true;
+        var self = this;
+        while(true) {
+            var operator = attempt(function() { return self.parseOperator(precedence.last); });
+            if(operator == null) break;
+            var right = 
+                if(precedence.leftAssociative) parseBinaryOperators(precedences, index + 1, parseLeaf)
+                else if(precedence.rightAssociative) parseBinaryOperators(precedences, index, parseLeaf)
+                else if(firstOperator) parseBinaryOperators(precedences, index + 1, parseLeaf)
+                else throw new ParserException("This operator is non-associative", file, line, column);
+            firstOperator = false;
+            left = ECall(EField(left, operator), right);
+        }
+        return left;
+    }
+
+    private inline function parseOperator(last: IntHash<Void>): String {
+        var value = advance();
+        if(!operatorCharacters.exists(value)) {
+            throw new ParserException("Expected operator", file, line, column);
+        }
+        var result = new StringBuf();
+        result.addChar(value);
+        value = peek();
+        while(operatorCharacters.exists(value)) {
+            result.addChar(advance());
+            value = peek();
+        }
+        var operator = result.toString();
+        if(specialOperators.exists(operator)) {
+            throw new ParserException("Unexpected special operator", file, line, column);
+        }
+        if(!last.exists(operator.charCodeAt(operator.length - 1))) {
+            throw new ParserException("Unexpected operator character or precedence", file, line, column);
+        }
+        ignoreNewline();
+        return operator;
     }
     
     // Token parsers
@@ -436,6 +564,7 @@ class Parser {
     
     private inline function parseInteger(): Int {
         var value = advance();
+        var first = value;
         if(!((value >= zero && value <= nine) || value == dash)) {
             throw new ParserException("Expected integer", file, line, column);
         }
@@ -443,6 +572,9 @@ class Parser {
         result.addChar(value);
         if(value != dash && peek() == lowerX) result.addChar(advance());
         value = peek();
+        if(first == dash && !(value >= zero && value <= nine)) {
+            throw new ParserException("Expected integer", file, line, column);
+        }
         while((value >= zero && value <= nine)) {
             result.addChar(advance());
             value = peek();
@@ -591,4 +723,6 @@ class ParserException {
         return message + f + l + c;
     }
 }
+
+typedef Precedence = {last: IntHash<Void>, leftAssociative: Bool, rightAssociative: Bool}
 
