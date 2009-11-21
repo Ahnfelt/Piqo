@@ -34,26 +34,35 @@ class Main {
         //trace(new Interpreter().evaluate(testRecursive()));
         var prelude = "
 print = {printString(_.String)}
-for = {|from| {|to| {|body|
-    (from <= to).then {
-        body(from)
-        for(from + 1, to, body)
-    }
-}}}
 while = {|condition| {|body|
     condition().then {
         body()
         while(condition, body)
     }
 }}
+for = {|from| {|to| {|body|
+    (from <= to).then {
+        body(from)
+        for(from + 1, to, body)
+    }
+}}}
+each = {|list| {|body|
+    (list.Empty.Not).then {
+        body(list.Head)
+        each(list.Tail, body)
+    }
+}}
 if = {_.thenElse}
 ()
         ";
         var program = "
-if(3 > 2) {
-    print 'yes'
-} {
-    print 'no'
+l = ['x', 'y' : [
+    'foo'
+    'bar'
+    'baz'
+]]
+each(l) {|x|
+    print x
 }
         ";
         try {

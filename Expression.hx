@@ -24,7 +24,7 @@ enum Pattern {
 }
 
 class Expressions {
-    private static var empty = EObject(null, new Hash<Expression>());
+    private static var voidObject = EObject(null, new Hash<Expression>());
 
     public static function free(expression: Expression, ?variables: Hash<Void>): Hash<Void> {
         if(variables == null) variables = new Hash<Void>();
@@ -76,7 +76,7 @@ class Expressions {
     }
 
     public static inline function getVoid(): Expression {
-        return empty;
+        return voidObject;
     }
 }
 

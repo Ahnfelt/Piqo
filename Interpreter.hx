@@ -111,7 +111,7 @@ class Interpreter {
                 evaluate(left, variables);
                 return evaluate(right, variables);
             case EEmpty:
-                return VList([]);
+                return Values.getEmpty();
             case EString(value):
                 return VString(value);
             case EInteger(value):

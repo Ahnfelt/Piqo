@@ -4,7 +4,6 @@ enum Value {
     VNative(body: Value -> Value);
     VLambda(environment: Hash<Value>, pattern: String, body: Expression);
     VObject(parent: Null<Value>, fields: Hash<Value>);
-    VList(value: Array<Value>);
     VString(value: String);
     VInteger(value: Int);
     VFloat(value: Float);
@@ -12,8 +11,20 @@ enum Value {
 }
 
 class Values {
+    public static function generateEmptyList() {
+        var fields = new Hash<Value>();
+        fields.set("after", VNative(function(other) { 
+            return getCons(other, emptyList);
+        }));
+        fields.set("empty", VNative(function(other) { 
+            return VBoolean(true);
+        }));
+        return VObject(null, fields);
+    }
+
+    private static var emptyList = generateEmptyList();
     private static var nothing = new Hash<Value>();
-    private static var empty = VObject(null, nothing);
+    private static var voidObject = VObject(null, nothing);
 
     public static function getObject(object: Value): Value {
         switch(object) {
@@ -145,9 +156,32 @@ class Values {
                 throw "Not implemented";
         }
     }
+
+    public static inline function getEmpty(): Value {
+        return emptyList;
+    }
+
+    public static function getCons(head, tail): Value {
+        var list = null;
+        var fields = new Hash<Value>();
+        fields.set("head", VNative(function(other) { 
+            return head;
+        }));
+        fields.set("tail", VNative(function(other) { 
+            return tail;
+        }));
+        fields.set("after", VNative(function(other) { 
+            return getCons(other, list);
+        }));
+        fields.set("empty", VNative(function(other) { 
+            return VBoolean(false);
+        }));
+        list = VObject(null, fields);
+        return list;
+    }
     
     public static inline function getVoid(): Value {
-        return empty;
+        return voidObject;
     }
 }
 

@@ -275,8 +275,8 @@ class Parser {
         elements.reverse();
         for(element in elements) {
             var fields = new Hash<Expression>();
-            fields.set("getFirst", ELet("_t", element, ELambda("_", EVariable("_t"))));
-            fields.set("getSecond", ELet("_t", result, ELambda("_", EVariable("_t"))));
+            fields.set("first", ELet("_t", element, ELambda("_", EVariable("_t"))));
+            fields.set("second", ELet("_t", result, ELambda("_", EVariable("_t"))));
             result = EObject(null, fields);
         }
         required(endParenthesis);
