@@ -196,7 +196,7 @@ class Parser {
     }
 
     private function parseApply() {
-        if(optional(dash)) return ECall(EField(parseAtom(), "negate"), Expressions.getVoid());
+        if(optional(dash)) return ECall(EField(parseAtom(), "negated"), Expressions.getVoid());
         if(optional(bang)) return ECall(EField(parseAtom(), "not"), Expressions.getVoid());
         var left = parseAtom();
         while(true) {
@@ -559,6 +559,7 @@ class Parser {
         } else {
             throw new ParserException("Expected string", file, line, column);
         }
+        ignore();
         return result.toString();
     }
     

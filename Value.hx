@@ -22,10 +22,12 @@ class Values {
             case VLambda(environment, pattern, body):
                 var fields = new Hash<Value>();
                 fields.set("get", object);
+                fields.set("string", VLambda(nothing, "_", EString("{ ... }")));
                 return VObject(null, fields);
             case VNative(body):
                 var fields = new Hash<Value>();
                 fields.set("get", object);
+                fields.set("string", VLambda(nothing, "_", EString("{ ... }")));
                 return VObject(null, fields);
             case VBoolean(value):
                 var fields = new Hash<Value>();
@@ -41,48 +43,102 @@ class Values {
                     if(value) ECall(EVariable("t"), Expressions.getVoid())
                     else ECall(EVariable("e"), Expressions.getVoid())
                 )));
-                fields.set("getNot", VNative(function(_) { return VBoolean(!value); }));
+                fields.set("string", VLambda(nothing, "_", EString(
+                    Std.string(value)
+                )));
+                fields.set("not", VNative(function(_) { return VBoolean(!value); }));
                 return VObject(null, fields);
             case VInteger(value):
                 var fields = new Hash<Value>();
-                fields.set("less", VNative(function(other) { switch(other) {
+                fields.set("<", VNative(function(other) { switch(other) {
                     case VInteger(other):
                         return VBoolean(value < other);
                     default:
                         throw "runtime type error";
                 }}));
-                fields.set("greater", VNative(function(other) { switch(other) {
+                fields.set(">", VNative(function(other) { switch(other) {
                     case VInteger(other):
                         return VBoolean(value > other);
                     default:
                         throw "runtime type error";
                 }}));
-                fields.set("lessEqual", VNative(function(other) { switch(other) {
+                fields.set("<=", VNative(function(other) { switch(other) {
                     case VInteger(other):
                         return VBoolean(value <= other);
                     default:
                         throw "runtime type error";
                 }}));
-                fields.set("greaterEqual", VNative(function(other) { switch(other) {
+                fields.set(">=", VNative(function(other) { switch(other) {
                     case VInteger(other):
                         return VBoolean(value >= other);
                     default:
                         throw "runtime type error";
                 }}));
-                fields.set("equal", VNative(function(other) { switch(other) {
+                fields.set("==", VNative(function(other) { switch(other) {
                     case VInteger(other):
                         return VBoolean(value == other);
                     default:
                         throw "runtime type error";
                 }}));
-                fields.set("notEqual", VNative(function(other) { switch(other) {
+                fields.set("!=", VNative(function(other) { switch(other) {
                     case VInteger(other):
                         return VBoolean(value != other);
                     default:
                         throw "runtime type error";
                 }}));
-                fields.set("getSign", VLambda(nothing, "_", EInteger(
+                fields.set("+", VNative(function(other) { switch(other) {
+                    case VInteger(other):
+                        return VInteger(value + other);
+                    default:
+                        throw "runtime type error";
+                }}));
+                fields.set("-", VNative(function(other) { switch(other) {
+                    case VInteger(other):
+                        return VInteger(value - other);
+                    default:
+                        throw "runtime type error";
+                }}));
+                fields.set("*", VNative(function(other) { switch(other) {
+                    case VInteger(other):
+                        return VInteger(value * other);
+                    default:
+                        throw "runtime type error";
+                }}));
+                fields.set("/", VNative(function(other) { switch(other) {
+                    case VInteger(other):
+                        return VInteger(Math.floor(value / other));
+                    default:
+                        throw "runtime type error";
+                }}));
+                fields.set("%", VNative(function(other) { switch(other) {
+                    case VInteger(other):
+                        return VInteger(value % other);
+                    default:
+                        throw "runtime type error";
+                }}));
+                fields.set("^", VNative(function(other) { switch(other) {
+                    case VInteger(other):
+                        return VInteger(value ^ other);
+                    default:
+                        throw "runtime type error";
+                }}));
+                fields.set("negated", VLambda(nothing, "_", EInteger(
+                    -value
+                )));
+                fields.set("sign", VLambda(nothing, "_", EInteger(
                     if(value > 0) 1 else if(value < 0) -1 else 0
+                )));
+                fields.set("float", VLambda(nothing, "_", EFloat(
+                    value
+                )));
+                fields.set("string", VLambda(nothing, "_", EString(
+                    Std.string(value)
+                )));
+                return VObject(null, fields);
+            case VString(value):
+                var fields = new Hash<Value>();
+                fields.set("string", VLambda(nothing, "_", EString(
+                    value
                 )));
                 return VObject(null, fields);
             default:

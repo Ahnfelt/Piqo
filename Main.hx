@@ -32,18 +32,38 @@ class Main {
 
     public static function main() {
         //trace(new Interpreter().evaluate(testRecursive()));
-        var text = "
-(X: 10, Y: 20).x
+        var prelude = "
+print = {printString(_.String)}
+for = {|from| {|to| {|body|
+    (from <= to).then {
+        body(from)
+        for(from + 1, to, body)
+    }
+}}}
+while = {|condition| {|body|
+    condition().then {
+        body()
+        while(condition, body)
+    }
+}}
+if = {_.thenElse}
+()
+        ";
+        var program = "
+if(3 > 2) {
+    print 'yes'
+} {
+    print 'no'
+}
         ";
         try {
-            var e = new Parser().parse(text);
+            var e = new Parser().parse(prelude + "\n" + program);
             trace(e);
             var variables = new Hash<Value>();
-            var number = 0;
-            variables.set("print", VNative(function (v) {
+            variables.set("printString", VNative(function (v) {
                 switch(v) {
                     case VString(value):
-                        trace(number++ + ":" + value);
+                        trace(value);
                         return Values.getVoid();
                     default:
                         throw "wrong format";
