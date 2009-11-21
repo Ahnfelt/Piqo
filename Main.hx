@@ -53,19 +53,15 @@ each = {|list| {|body|
     }
 }}
 if = {_.thenElse}
+true = 1 == 1
+false = !true
 ()
         ";
         var program = "
-l = ['x', 'y' : [
-    'foo'
-    'bar'
-    'baz'
-]]
-each(l) {|x|
-    print x
-}
+print{}
         ";
         try {
+            trace("-");
             var e = new Parser().parse(prelude + "\n" + program);
             trace(e);
             var variables = new Hash<Value>();

@@ -129,7 +129,7 @@ class Values {
                 }}));
                 fields.set("^", VNative(function(other) { switch(other) {
                     case VInteger(other):
-                        return VInteger(value ^ other);
+                        return VInteger(Math.round(Math.pow(value, other)));
                     default:
                         throw "runtime type error";
                 }}));
@@ -137,6 +137,87 @@ class Values {
                     -value
                 )));
                 fields.set("sign", VLambda(nothing, "_", EInteger(
+                    if(value > 0) 1 else if(value < 0) -1 else 0
+                )));
+                fields.set("float", VLambda(nothing, "_", EFloat(
+                    value
+                )));
+                fields.set("string", VLambda(nothing, "_", EString(
+                    Std.string(value)
+                )));
+                return VObject(null, fields);
+            case VFloat(value):
+                var fields = new Hash<Value>();
+                fields.set("<", VNative(function(other) { switch(other) {
+                    case VFloat(other):
+                        return VBoolean(value < other);
+                    default:
+                        throw "runtime type error";
+                }}));
+                fields.set(">", VNative(function(other) { switch(other) {
+                    case VFloat(other):
+                        return VBoolean(value > other);
+                    default:
+                        throw "runtime type error";
+                }}));
+                fields.set("<=", VNative(function(other) { switch(other) {
+                    case VFloat(other):
+                        return VBoolean(value <= other);
+                    default:
+                        throw "runtime type error";
+                }}));
+                fields.set(">=", VNative(function(other) { switch(other) {
+                    case VFloat(other):
+                        return VBoolean(value >= other);
+                    default:
+                        throw "runtime type error";
+                }}));
+                fields.set("==", VNative(function(other) { switch(other) {
+                    case VFloat(other):
+                        return VBoolean(value == other);
+                    default:
+                        throw "runtime type error";
+                }}));
+                fields.set("!=", VNative(function(other) { switch(other) {
+                    case VFloat(other):
+                        return VBoolean(value != other);
+                    default:
+                        throw "runtime type error";
+                }}));
+                fields.set("+", VNative(function(other) { switch(other) {
+                    case VFloat(other):
+                        return VFloat(value + other);
+                    default:
+                        throw "runtime type error";
+                }}));
+                fields.set("-", VNative(function(other) { switch(other) {
+                    case VFloat(other):
+                        return VFloat(value - other);
+                    default:
+                        throw "runtime type error";
+                }}));
+                fields.set("*", VNative(function(other) { switch(other) {
+                    case VFloat(other):
+                        return VFloat(value * other);
+                    default:
+                        throw "runtime type error";
+                }}));
+                fields.set("/", VNative(function(other) { switch(other) {
+                    case VFloat(other):
+                        return VFloat(Math.floor(value / other));
+                    default:
+                        throw "runtime type error";
+                }}));
+                fields.set("^", VNative(function(other) { switch(other) {
+                    case VFloat(other):
+                        return VFloat(Math.pow(value, other));
+                    default:
+                        throw "runtime type error";
+                }}));
+                fields.set("negated", VLambda(nothing, "_", EFloat(
+                    -value
+                )));
+                fields.set("sign", VLambda(nothing, "_", EFloat(
                     if(value > 0) 1 else if(value < 0) -1 else 0
                 )));
                 fields.set("float", VLambda(nothing, "_", EFloat(

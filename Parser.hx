@@ -71,6 +71,8 @@ class Parser {
         result.set(":", null);
         result.set(".", null);
         result.set("|", null);
+        result.set("||", null);
+        result.set("&&", null);
         result.set("!", null);
         result.set("=", null);
         result.set(":=", null);
