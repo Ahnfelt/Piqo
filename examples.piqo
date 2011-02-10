@@ -92,14 +92,14 @@
 
 # Slots are defined like this:
 
-    slot = {|value|
+    slot = {|value| (
         getValue: {
             # Magic goes here
         }
         setValue: {
             # More magic goes here
         }
-    }
+    )}
 
 # So when you do this:
 
